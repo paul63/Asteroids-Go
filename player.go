@@ -28,15 +28,10 @@ var (
 )
 
 type Player struct {
-	position vector2.Vector
-	rotation float64
-	sprite   *ebiten.Image
-	width	 int
-	height	 int
+	GameSprite
 	loaded	bool			
 	alive	bool
 	thrust	float64
-	direction	vector2.Vector
 	hyperJumpTimer	int
 	reverseTimer 	int
 }
@@ -48,12 +43,10 @@ func NewPlayer() *Player {
 		Y: ScreenHeight/2,
 	}
 
+	gameSprite := NewGameSprite(sprite, pos, vector2.Vector{X:0, Y:0}, 0)
+
 	return &Player{
-		position: pos,
-		rotation: 0, 
-		sprite:   sprite,
-		width:	  sprite.Bounds().Dx(),
-		height:   sprite.Bounds().Dy(),
+		GameSprite: gameSprite,
 		loaded:   true,
 		alive:	  true,
 		thrust:	  0,		
@@ -73,7 +66,7 @@ func (p *Player) ScreenPos() ScreenPos {
 }
 
 func (p *Player) LaunchMissile() {
-	NewMissile(p.position, p.rotation)
+	NewMissile(p.position, p.angle)
 	p.loaded = false
 	reloadTimer = reloadTime
 }
@@ -81,8 +74,8 @@ func (p *Player) LaunchMissile() {
 func (p *Player) Update() {
 	// check if need to move player
 	if p.thrust > 0 {
-		p.position.X += p.direction.X * p.thrust / 5
-		p.position.Y += p.direction.Y * p.thrust / 5
+		p.position.X += p.movement.X * p.thrust / 5
+		p.position.Y += p.movement.Y * p.thrust / 5
 		p.thrust -= 1
 		if p.thrust == 0 {
 			p.sprite = playerSprite
@@ -118,15 +111,15 @@ func (p *Player) Update() {
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		// rotate left
-		p.rotation -= rotationSpeed
+		p.angle -= rotationSpeed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		// rotate right
-		p.rotation += rotationSpeed
+		p.angle += rotationSpeed
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) && p.reverseTimer <= 0 {
 		// reverse direction
-		p.rotation += 1.5708 * 2
+		p.angle += 1.5708 * 2
 		p.reverseTimer = GapTimer
 	}
 	if ebiten.IsKeyPressed(ebiten.KeySpace) && p.loaded {
@@ -136,7 +129,7 @@ func (p *Player) Update() {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) && p.loaded {
         // Set player to point in direction of mouse cursor and fire missile
 		x, y := ebiten.CursorPosition()
-		p.rotation = p.position.PointTowards(vector2.Vector{X: float64(x), Y: float64(y)})
+		p.angle = p.position.PointTowards(vector2.Vector{X: float64(x), Y: float64(y)})
 		p.LaunchMissile()
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButton2) || ebiten.IsKeyPressed(ebiten.KeyArrowUp){
@@ -144,9 +137,9 @@ func (p *Player) Update() {
 		p.thrust = MaxThrust
 		p.sprite = playerSpriteThrust
 		// Calculate a target so flies in direction ship pointing
-		p.direction = vector2.Vector{
-			X: math.Sin(p.rotation),
-			Y: math.Cos(p.rotation) * -1,
+		p.movement = vector2.Vector{
+			X: math.Sin(p.angle),
+			Y: math.Cos(p.angle) * -1,
 		}
 	}
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButton1) || ebiten.IsKeyPressed(ebiten.KeyH){
@@ -161,7 +154,7 @@ func (p *Player) Update() {
 
 func (p *Player) Draw(screen *ebiten.Image) {
 	if p.alive{
-		DrawImage(screen, p.sprite, p.position.X, p.position.Y, p.rotation)
+		p.DrawImage(screen)
 	}
 }
 
@@ -174,7 +167,7 @@ func (p *Player) Hit(){
 func (p *Player) Reset() {
 	p.position.X = ScreenWidth/2
 	p.position.Y = ScreenHeight/2
-	p.rotation = 0
+	p.angle = 0
 	p.loaded = true
 	p.alive = true
 	p.thrust = 0

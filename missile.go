@@ -41,13 +41,7 @@ func ClearAllMissiles(){
 }
 
 type Missile struct {
-	position 	vector2.Vector
-	movement	vector2.Vector
-	rotation 	float64
-	width 		int
-	height		int
-	sprite   	*ebiten.Image
-	done		bool
+	GameSprite
 }
 
 // Create missile at x, y, rotated by angle and traveling toward target
@@ -75,15 +69,11 @@ func NewMissile(pos vector2.Vector, angle float64) *Missile {
 	pos.X += movement.X * 4
 	pos.Y += movement.Y * 4
 
+	gameSprite := NewGameSprite(sprite, pos, movement, angle)
+
 	//create missile
 	missile := Missile{
-		position: pos,
-		movement: movement,
-		rotation: angle, 
-		sprite:   sprite,
-		width:	  sprite.Bounds().Dx(),
-		height:   sprite.Bounds().Dy(),
-		done: 	  false,	
+		GameSprite: gameSprite,
 	}
 
 	// Add to list of missiles
@@ -111,7 +101,5 @@ func (m *Missile) Update() {
 }
 
 func (m *Missile) Draw(screen *ebiten.Image) {
-	if !m.done {
-		DrawImage(screen, m.sprite, m.position.X, m.position.Y, m.rotation)
-	}
+	m.DrawImage(screen)
 }

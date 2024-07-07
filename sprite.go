@@ -11,7 +11,46 @@ import (
 	_ "image/png"
 	"math"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/paul63/vector2"
 )
+
+type GameSprite struct {
+	position 		vector2.Vector
+	movement		vector2.Vector
+	angle			float64
+	sprite   		*ebiten.Image
+	width 			int
+	height			int
+	done			bool
+}
+
+func NewGameSprite(sprite *ebiten.Image, pos, movement vector2.Vector, angle float64) GameSprite {
+	return GameSprite{
+		position: pos,
+		movement: movement,
+		angle: 	  angle, 
+		sprite:   sprite,
+		width:	  sprite.Bounds().Dx(),
+		height:   sprite.Bounds().Dy(),
+		done: 	  false,	
+	}
+}
+
+func (gs GameSprite) DrawImage(screen  *ebiten.Image) {
+	if !gs.done {
+		op := &ebiten.DrawImageOptions{}
+		halfW := float64(gs.width / 2)
+		halfH := float64(gs.height / 2)
+		// move image so center aligns with 0, 0
+		op.GeoM.Translate(-halfW, -halfH)
+		// do the rotation
+		op.GeoM.Rotate(gs.angle)
+		// move it to required position X & Y will be center of sprite as relative to 0,0
+		op.GeoM.Translate(gs.position.X , gs.position.Y)
+		screen.DrawImage(gs.sprite, op)
+	}
+}
+
 
 // Load the image requested in name
 func LoadImage(name string) *ebiten.Image {
@@ -27,23 +66,6 @@ func LoadImage(name string) *ebiten.Image {
 	}
 
 	return ebiten.NewImageFromImage(img)
-}
-
-// Draws sprite on the screen center at x, y and rotated by rotate
-func DrawImage(screen  *ebiten.Image, sprite *ebiten.Image, x, y, rotate float64) {
-	op := &ebiten.DrawImageOptions{}
-	width := sprite.Bounds().Dx()
-	height := sprite.Bounds().Dy()
-	halfW := float64(width / 2)
-	halfH := float64(height / 2)
-	// move image so center aligns with 0, 0
-	op.GeoM.Translate(-halfW, -halfH)
-	// do the rotation
-	op.GeoM.Rotate(rotate)
-	// move it to required position X & Y will be center of sprite as relative to 0,0
-	op.GeoM.Translate(x , y)
-	screen.DrawImage(sprite, op)
-
 }
 
 // Struct representing the sprite position on the screen

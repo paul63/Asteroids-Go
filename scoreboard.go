@@ -90,6 +90,21 @@ func (sb *ScoreBoard) SaveHighScore(){
 	}
 }
 
+// Draws sprite on the screen center at x, y and rotated by rotate
+func DrawLife(screen  *ebiten.Image, sprite *ebiten.Image, x, y float64) {
+	op := &ebiten.DrawImageOptions{}
+	width := sprite.Bounds().Dx()
+	height := sprite.Bounds().Dy()
+	halfW := float64(width / 2)
+	halfH := float64(height / 2)
+	// move image so center aligns with 0, 0
+	op.GeoM.Translate(-halfW, -halfH)
+	// move it to required position X & Y will be center of sprite as relative to 0,0
+	op.GeoM.Translate(x , y)
+	screen.DrawImage(sprite, op)
+
+}
+
 func (sb *ScoreBoard) DrawScore(screen *ebiten.Image){
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(20, 20)
@@ -104,7 +119,7 @@ func (sb *ScoreBoard) DrawScore(screen *ebiten.Image){
 		Size:   20,
 	}, op)
 	for i := 0; i < sb.lives; i++ {
-		DrawImage(screen, playerSprite, float64(ScreenWidth - 35 - i * 40), 30, 0)
+		DrawLife(screen, playerSprite, float64(ScreenWidth - 35 - i * 40), 30)
 	}	
 }
 

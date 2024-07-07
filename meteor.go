@@ -2,6 +2,8 @@
 // for Asteroids written in Go using Ebitengine
 // Author Paul Brace
 // July 2024
+// Updated 07/07/24 to refactor using base GameSprite struct and 
+//   correct meteor start position.
 
 package main
 
@@ -50,15 +52,9 @@ func ClearAllMeteors(){
 }
 
 type Meteor struct {
-	position 		vector2.Vector
-	movement		vector2.Vector
+	GameSprite
 	rotationSpeed	float64
-	angle			float64
 	size			int
-	sprite   		*ebiten.Image
-	width 			int
-	height			int
-	done			bool
 }
 
 // To create a new Meteor and add to list
@@ -81,16 +77,16 @@ func NewMeteor(player *Player) *Meteor {
 	switch edge{
 	case 0:
 		x = -10
-		y = rand.IntN(ScreenWidth)
+		y = rand.IntN(ScreenHeight)
 	case 1:
 		x = ScreenWidth + 10
-		y = rand.IntN(ScreenHeight)
+		y = rand.IntN(ScreenHeight)  // Corrected was ScreenWidth
 	case 2:
 		y = - 10
 		x = rand.IntN(ScreenWidth)
 	default:
 		y = ScreenHeight + 10
-		x = rand.IntN(ScreenHeight)
+		x = rand.IntN(ScreenWidth)  // Corrected was ScreenHeight
 	}
 	pos := vector2.Vector{
 		X: float64(x),
@@ -116,16 +112,12 @@ func NewMeteor(player *Player) *Meteor {
 
 	rotationSpeed := -0.02 + rand.Float64()*0.04
 
+	gameSprite := NewGameSprite(sprite, pos, movement, 0)
+
 	meteor := Meteor{
-		position: pos,
-		movement: movement,
+		GameSprite: gameSprite,
 		rotationSpeed: rotationSpeed,
-		angle:    0,
 		size:     size,
-		sprite:   sprite,
-		width:	  sprite.Bounds().Dx(),
-		height:   sprite.Bounds().Dy(),
-		done:	  false,	
 	}
 	// Add to list of meteors
 	meteors = append(meteors, &meteor)
@@ -169,16 +161,12 @@ func NewFragment(size int, x, y float64) *Meteor {
 
 	rotationSpeed := -0.02 + rand.Float64()*0.04
 
+	gameSprite := NewGameSprite(sprite, pos, movement, 0)
+
 	meteor := Meteor{
-		position: pos,
-		movement: movement,
+		GameSprite: gameSprite,
 		rotationSpeed: rotationSpeed,
-		angle:    0,
 		size:     size,
-		sprite:   sprite,
-		width:	  sprite.Bounds().Dx(),
-		height:   sprite.Bounds().Dy(),
-		done:	  false,	
 	}
 	// Add to list of meteors
 	meteors = append(meteors, &meteor)
@@ -206,9 +194,7 @@ func (m *Meteor) Update() {
 }
 
 func (m *Meteor) Draw(screen *ebiten.Image) {
-	if !m.done{
-		DrawImage(screen, m.sprite, m.position.X, m.position.Y, m.angle)
-	}
+	m.DrawImage(screen)
 }
 
 // Process meteor being hit and return score based on size
